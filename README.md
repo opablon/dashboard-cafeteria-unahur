@@ -1,3 +1,13 @@
+---
+title: Dashboard Cafeteria Unahur
+emoji: ☕
+colorFrom: gray
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # ☕ Dashboard de Operaciones - Cafetería UNAHUR
 
 Este proyecto es una aplicación **Full-Stack de Data Science** diseñada para optimizar las operaciones de una cafetería universitaria. Transforma un análisis académico estático en un **Dashboard Interactivo de Gestión**.
