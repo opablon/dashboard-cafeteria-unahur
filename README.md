@@ -58,7 +58,7 @@ La aplicación cuenta con 5 módulos estratégicos:
 
 1.  Clonar el repositorio:
 
-        git clone [https://github.com/opablon/dashboard-cafeteria-unahur](https://github.com/TU_USUARIO/dashboard-cafeteria-unahur)
+        git clone https://github.com/opablon/dashboard-cafeteria-unahur
 
 2.  Instalar dependencias:
 
