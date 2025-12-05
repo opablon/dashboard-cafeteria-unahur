@@ -1,0 +1,286 @@
+#' ---
+#' title: "TP3"
+#' author: "Pablo Occhiuzzi, Julián Ojeda"
+#' format: pdf
+#' editor: visual
+#' ---
+#' 
+#' # Trabajo Práctico N°3
+#' 
+#' Para este trabajo se les proporciona el archivo `cafeteria_UNAHUR.csv`, usado en el TP1, que contiene registros correspondientes a transacciones en la cafetería. El dataset incluye información de la cantidad de productos adquiridos y el tiempo de preparación.
+#' 
+#' Para la correcta realización del presente Trabajo Práctico, se pide dar las respuestas solicitadas e introducir, dentro del chunk correspondiente, el código desarrollado para obtener cada una de ellas. Incluir además, los paquetes utilizados. La idea es que una persona pueda correr este script sin ningún mensaje de error.
+#' 
+#' Paquetes utilizados
+#' 
+## --------------------------------------------------------------------------------
+install.packages("ggplot2")
+install.packages("ggthemes")
+library(ggplot2)
+library(ggthemes)
+
+#' 
+#' Ingesta de datos
+#' 
+## --------------------------------------------------------------------------------
+datos <- read.csv("cafeteria_UNAHUR.csv")
+
+#' 
+#' 1.  Escribir el modelo de regresión lineal simple que describa la influencia de la cantidad de productos pedidos en el tiempo de espera.
+#' 
+## ----message=FALSE---------------------------------------------------------------
+attach(datos)
+modelo <- lm(tiempo_de_espera ~ Cantidad)
+summary(modelo)
+modelo$coefficients
+detach(datos)
+
+#' 
+#' 2.  Representar gráficamente la relación entre la cantidad de productos pedidos y el tiempo de espera. Agregar al gráfico la recta de ajuste obtenida con el modelo de regresión lineal.
+#' 
+## ----message=FALSE---------------------------------------------------------------
+ggplot(data = na.omit(datos), aes(x = Cantidad, y = tiempo_de_espera)) +
+  geom_point(color = "darkseagreen") +
+  geom_abline(slope = 2.0731, intercept = -0.2111, color = "cyan") +
+  xlab("Cantidad") +
+  ylab("Tiempo de Espera") +
+  theme_hc()
+
+#' 
+## --------------------------------------------------------------------------------
+sum(datos$Cantidad > 5, na.rm = TRUE)
+
+#' 
+#' 3.  Calcular el error estándar residual y el coeficiente de determinación (R²) del modelo de regresión lineal. ¿Qué se puede concluir sobre la bondad de ajuste del modelo que relaciona la cantidad de productos pedidos con el tiempo de espera?
+#' 
+## --------------------------------------------------------------------------------
+# Volvemos a llamar al resumen para extraer los valores.
+resumen_modelo <- summary(modelo)
+
+# Error Estándar Residual (RSE)
+rse <- resumen_modelo$sigma
+cat("El Error Estándar Residual (RSE) es:", rse, "\n")
+
+# Coeficiente de Determinación (R-cuadrado)
+r_cuadrado <- resumen_modelo$r.squared
+cat("El Coeficiente de Determinación (R²) es:", r_cuadrado, "\n")
+
+#' 
+#' El 94.85% de la variabilidad total en el tiempo_espera es explicada por la cantidad_productos pedidos. La cantidad de productos que pide una persona es un predictor muy fuerte de cuánto va a tardar su pedido. Solo un \~5% del tiempo de espera se debe a otros factores.
+#' 
+#' Respecto al RSE, Las predicciones del modelo sobre el tiempo de espera se desvían del valor real observado en solo 0.70 minutos (asumimos minutos). Dado el altísimo $R^2$, este error es considerado muy bajo, lo que refuerza la idea de que el modelo es muy preciso.
+#' 
+#' 4.  Utilizar el modelo para predecir el tiempo de espera correspondiente a un pedido de 6 productos y para 12 productos. Representar ambos puntos en el gráfico anterior junto con la recta de ajuste.
+#' 
+## ----message=FALSE---------------------------------------------------------------
+productos_a_predecir <- data.frame(Cantidad = c(6, 12))
+predicciones_datos <- predict(modelo, newdata = productos_a_predecir)
+
+cat("Predicción para 6 productos:", predicciones_datos[1], "\n")
+cat("Predicción para 12 productos:", predicciones_datos[2], "\n")
+
+puntos_prediccion <- data.frame(
+  Cantidad = c(6, 12),
+  tiempo_de_espera = predicciones_datos
+)
+
+ggplot(data = na.omit(datos), aes(x = Cantidad, y = tiempo_de_espera)) +
+  geom_point(color = "darkseagreen") +
+  geom_abline(slope = 2.0731, intercept = -0.2111, color = "cyan") +
+  # Añadimos los puntos de predicción
+  geom_point(data = puntos_prediccion, color = "red", size = 4, shape = 17) +
+  xlab("Cantidad") +
+  ylab("Tiempo de Espera") +
+  theme_hc()
+
+#' 
+#' 5.  Estudiar la presencia de datos faltantes (NA) en cada una de las variables del conjunto de datos. Identificar en qué columnas se presentan y cuántos valores faltan en cada caso.
+#' 
+## --------------------------------------------------------------------------------
+summary(datos)
+
+#' 
+#' 6.  Realizar una imputación de datos faltantes por la media para la variable Cantidad.
+#' 
+## --------------------------------------------------------------------------------
+df_imp_media <- datos
+
+media_cantidad <- mean(datos$Cantidad, na.rm = TRUE)
+
+df_imp_media$Cantidad[is.na(df_imp_media$Cantidad)] <- as.integer(media_cantidad)
+
+#' 
+#' 7.  Realizar una imputación de datos faltantes de la columna cantidad por el método de Cohen.
+#' 
+## --------------------------------------------------------------------------------
+# Calculamos la cantidad total de observaciones y la cantidad de datos no faltantes
+n <- length(datos$Cantidad)
+m <- length(na.omit(datos$Cantidad))
+n_faltantes <- n - m
+
+# Calculamos la media y el desvío estándar usando los datos disponibles
+media <- mean(datos$Cantidad, na.rm = TRUE)
+sigma <- sd(datos$Cantidad, na.rm = TRUE)
+
+# Calculamos los valores de las imputaciones
+factor <- sqrt((n + m - 1) / (n + m))
+imp_bajo <- media - factor * sigma
+imp_alto <- media + factor * sigma
+
+# Dividimos los registros con datos faltantes a la mitad
+# Posiciones donde hay datos faltantes
+pos_na <- which(is.na(datos$Cantidad) == TRUE)
+
+# Dividimos las posiciones a la mitad
+pos1 <- pos_na[1:round(n_faltantes / 2)]
+pos2 <- pos_na[(round(n_faltantes / 2) + 1):n_faltantes]
+
+# Realizamos las imputaciones
+df_imp_Cohen <- datos
+df_imp_Cohen$Cantidad[pos1] <- as.integer(imp_bajo)
+df_imp_Cohen$Cantidad[pos2] <- as.integer(imp_alto)
+
+#' 
+#' 8.  Realizar una imputación de datos faltantes de la columna cantidad por regresión lineal
+#' 
+## --------------------------------------------------------------------------------
+datos_sin_na <- na.omit(datos)
+
+# Calculamos el modelo
+model <- lm(formula = Cantidad ~ ., data = datos_sin_na)
+model
+
+# Predecimos la edad usando los registros donde esta variable presenta valores faltantes
+predicciones_rl <- predict(model, newdata = datos[pos_na,])
+
+# Realizamos las imputaciones.
+df_imp_rl <- datos
+df_imp_rl$Cantidad[pos_na] <-  as.integer(predicciones_rl)
+
+#' 
+#' 9.  Con todas las variables sin datos faltantes, realizar una imputación de datos faltantes por vecinos más cercanos utilizando la distancia de Manhattan.
+#' 
+## --------------------------------------------------------------------------------
+# Función para calcular la distancia de Manhattan
+dMan <- function(x, y){
+  return(sum(abs(x - y)))
+}
+
+# Distancia de Manhattan
+distMan <- matrix(0, nrow = (n - m), ncol = m)
+for (i in 1:(n - m)){
+  for (j in 1:m){
+    distMan[i,j] <- dMan(datos[pos_na[i], -1], datos_sin_na[j,-1]) 
+  }
+}
+
+# Vamos a calcular los registros que están a la mínima distancia.
+minDistMan <- apply(distMan, 1, which.min)
+
+# Realizamos las imputaciones.
+df_imp_knn <- datos
+df_imp_knn$Cantidad[pos_na] <- datos_sin_na$Cantidad[minDistMan]
+
+#' 
+#' 10. Realizar un histograma de los datos disponibles para la cantidad y compararlo con los histogramas de cada uno de los métodos de imputación aplicados.
+#' 
+## ----warning=FALSE---------------------------------------------------------------
+# Armamos un data frame con las imputaciones
+datos_comparacion <- data.frame(
+    Originales = datos$Cantidad,
+    Media = df_imp_media$Cantidad,
+    Cohen = df_imp_Cohen$Cantidad,
+    Regresion = df_imp_rl$Cantidad,
+    VecinosMan = df_imp_knn$Cantidad
+  )
+
+# Armamos los histogramas
+h1 <- ggplot(datos_comparacion, aes(x = Originales)) +
+  geom_histogram(fill = "gray80", color = "black", position = "identity", bins = 25) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+h2 <- ggplot(datos_comparacion, aes(x = Media)) +
+  geom_histogram(fill = "darkseagreen2", color = "darkseagreen", position = "identity", bins = 25) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+h3 <- ggplot(datos_comparacion, aes(x = Cohen)) +
+  geom_histogram(fill = "darkseagreen2", color = "darkseagreen", position = "identity", bins = 25) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+h4 <- ggplot(datos_comparacion, aes(x = Regresion)) +
+  geom_histogram(fill = "darkseagreen2", color = "darkseagreen", position = "identity", bins = 25) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+h5 <- ggplot(datos_comparacion, aes(x = VecinosMan)) +
+  geom_histogram(fill = "darkseagreen2", color = "darkseagreen", position = "identity", bins = 25) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Mostramos los gráficos uno por uno
+h1
+h2
+h3
+h4
+h5
+
+#' 
+## --------------------------------------------------------------------------------
+df_original  <- data.frame(Valor = datos$Cantidad, Metodo = "Original")
+df_media     <- data.frame(Valor = df_imp_media$Cantidad, Metodo = "Media")
+df_cohen     <- data.frame(Valor = df_imp_Cohen$Cantidad, Metodo = "Cohen")
+df_regresion <- data.frame(Valor = df_imp_rl$Cantidad, Metodo = "Regresion")
+df_knn       <- data.frame(Valor = df_imp_knn$Cantidad, Metodo = "kNN")
+
+df_comparacion_largo <- rbind(df_original, df_media, df_cohen, df_regresion, df_knn)
+
+conteo_completo <- table(Metodo = df_comparacion_largo$Metodo, 
+                         Valor = df_comparacion_largo$Valor, 
+                         useNA = "ifany") # useNA muestra la columna <NA>
+
+print(conteo_completo)
+
+#' 
+## ----warning=FALSE, message=FALSE------------------------------------------------
+# --- Análisis de los NAs según Tiempo de Espera ---
+
+# 1. Preparamos los datos completos
+# Filtramos solo cantidades de 1 a 5 para no ensuciar el gráfico con outliers
+datos_completos <- subset(datos, !is.na(Cantidad) & Cantidad <= 5)
+datos_completos$Tipo <- as.factor(datos_completos$Cantidad) # Convertimos a factor para colorear
+
+# 2. Preparamos los datos NA
+datos_na <- subset(datos, is.na(Cantidad))
+datos_na$Tipo <- "NA (Faltantes)"
+
+# 3. Combinamos para graficar
+# Seleccionamos solo las columnas necesarias
+df_plot <- rbind(
+  data.frame(tiempo = datos_completos$tiempo_de_espera, Grupo = paste("Cant =", datos_completos$Tipo)),
+  data.frame(tiempo = datos_na$tiempo_de_espera, Grupo = "Datos Faltantes (NA)")
+)
+
+# 4. Gráfico de Densidad Comparativo
+ggplot(df_plot, aes(x = tiempo, fill = Grupo, color = Grupo)) +
+  # Dibujamos las curvas de densidad con transparencia
+  geom_density(alpha = 0.3) +
+  
+  # Personalización
+  scale_fill_manual(values = c("red", "blue", "green", "orange", "purple", "black")) +
+  scale_color_manual(values = c("red", "blue", "green", "orange", "purple", "black")) +
+  
+  labs(title = "Distribución del Tiempo de Espera: Datos Completos vs NAs",
+       subtitle = "¿A qué grupo se parecen más los datos faltantes?",
+       x = "Tiempo de Espera (min)",
+       y = "Densidad") +
+  theme_minimal() +
+  # Limitamos el eje X para ver mejor la zona importante (0 a 15 min)
+  coord_cartesian(xlim = c(0, 15))
+
+#' 
+## --------------------------------------------------------------------------------
+write.csv(datos, "tp3_regresion_imputacion.csv", row.names = FALSE)
+

@@ -1,0 +1,265 @@
+#' ---
+#' title: "Trabajo Práctico 2"
+#' author: "Occhiuzzi, Pablo y Ojeda, Julián"
+#' format: pdf
+#' editor: visual
+#' editor_options: 
+#'   chunk_output_type: inline
+#' ---
+#' 
+#' # Análisis Exploratorio de Datos
+#' 
+#' Tras el análisis realizado en el TP1, la cafetería de especialidad de UNAHUR puso carritos de café en cada sede de UNAHUR y decidió poner a prueba sus ventas con un combo de "Café + Medialuna" a \$2.000.
+#' 
+#' En el archivo `Visitas_cafeteria_UNAHUR.csv` se encuentran los datos correspondientes a un conjunto de ventas del combo en las diferentes sedes.
+#' 
+#' Para la correcta realización del presente Trabajo Práctico, se pide dar las respuestas solicitadas e introducir, dentro del *chunk* correspondiente, el código desarrollado para obtener cada una de ellas. Incluir además, los paquetes utilizados. La idea es que una persona pueda correr este script sin ningún mensaje de error.
+#' 
+#' 0.  Paquetes necesarios.
+#' 
+## -----------------------------------------------------------------------------
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(corrplot)
+
+#' 
+#' 1.  Leer el archivo. Chequear que el formato sea `data.frame` y, en caso, contrario, cambiarlo.
+#' 
+## -----------------------------------------------------------------------------
+datos <- Visitas_cafeteria_UNAHUR
+cat("¿Es un data frame?:", is.data.frame(datos))
+
+#' 
+#' 2.  Luego de eliminar registros con datos faltantes, informar las siguientes medidas para la cantidad de visitantes: rango, media, mediana, desvío estándar y rango intercuartil.
+#' 
+## -----------------------------------------------------------------------------
+datos_limpios <- na.omit(datos)
+rango_cantidad_visitanes <- range(datos_limpios$cantidad_visitantes)
+media_cantidad_visitantes <- mean(datos_limpios$cantidad_visitantes)
+mediana_cantidad_visitantes <- median(datos_limpios$cantidad_visitantes)
+desvio_estandar_cantidad_visitantes <- sd(datos_limpios$cantidad_visitantes)
+iqr_cantidad_visitantes <- IQR(datos_limpios$cantidad_visitantes)
+
+# 1. Rango
+cat("1. RANGO:\n")
+cat("   - Valor Mínimo:", rango_cantidad_visitanes[1], "\n")
+cat("   - Valor Máximo:", rango_cantidad_visitanes[2], "\n")
+cat("   - Amplitud Total:", rango_cantidad_visitanes[2] - rango_cantidad_visitanes[1], "\n\n")
+
+# 2. Media
+cat("2. MEDIA (Promedio):\n")
+cat("   - Media:", round(media_cantidad_visitantes, 2), "\n\n")
+
+# 3. Mediana
+cat("3. MEDIANA (Valor Central):\n")
+cat("   - Mediana:", mediana_cantidad_visitantes, "\n\n")
+
+# 4. Desvío Estándar
+cat("4. DESVÍO ESTÁNDAR (Dispersión):\n")
+cat("   - Desvío Estándar:", round(desvio_estandar_cantidad_visitantes, 2), "\n\n")
+
+# 5. Rango Intercuartil (IQR)
+cat("5. RANGO INTERCUARTIL (IQR):\n")
+cat("   - IQR (Q3 - Q1):", iqr_cantidad_visitantes, "\n")
+
+#' 
+#' 3.  Realizar un histograma de los datos sobre la cantidad de visitantes y superponerle la curva Normal ¿Qué puede observarse?
+#' 
+## -----------------------------------------------------------------------------
+hist(datos_limpios$cantidad_visitantes, breaks = 20, freq = FALSE,
+main = "Distribución de visitantes",
+xlab = "Cantidad de visitantes", col = "lightblue")
+curve(dnorm(x, mean(datos_limpios$cantidad_visitantes), sd(datos_limpios$cantidad_visitantes)),
+add = TRUE, col = "red", lwd = 2)
+
+hist(datos_limpios$cantidad_visitantes, breaks = 200, freq = FALSE,
+main = "Distribución de visitantes",
+xlab = "Cantidad de visitantes", col = "lightblue")
+curve(dnorm(x, mean(datos_limpios$cantidad_visitantes), sd(datos_limpios$cantidad_visitantes)),
+add = TRUE, col = "red", lwd = 2)
+
+#' 
+#' 4.  Dividir la cantidad de visitantes por sede y usando un grafíco de tipo boxplot, analizar los resultados.
+#' 
+## -----------------------------------------------------------------------------
+datos_limpios[datos_limpios$sede == "Trabajo_argentino", "sede"] <- "Trabajo_Argentino"
+
+ggplot(datos_limpios, aes(x = sede, y = cantidad_visitantes, fill = sede)) +
+  geom_boxplot() +
+  labs(title = "Distribución de Visitantes por Sede",
+       x = "Sede",
+       y = "Cantidad de Visitantes") +
+  theme(legend.position = "none") +
+  coord_flip()
+
+#' 
+#' 5.  Representar el monto por sede con un gráfico de barras e indicar cuáles son las sedes con menor y mayor monto total de ventas
+#' 
+## -----------------------------------------------------------------------------
+gasto_por_sede <- datos_limpios %>%
+  group_by(sede) %>%
+  summarise(Gasto_Total = sum(gasto_total))
+
+sede_mayor_monto <- gasto_por_sede$sede[which.max(gasto_por_sede$Gasto_Total)]
+mayor_monto <- max(gasto_por_sede$Gasto_Total)
+sede_menor_monto <- gasto_por_sede$sede[which.min(gasto_por_sede$Gasto_Total)]
+menor_monto <- min(gasto_por_sede$Gasto_Total)
+
+cat("MAYOR:", sede_mayor_monto, "($", format(mayor_monto,
+                                     big.mark = ".",
+                                     decimal.mark = ","), ") \n")
+cat("MENOR:", sede_menor_monto, "($", format(menor_monto,
+                                     big.mark = ".",
+                                     decimal.mark = ","), ")\n")
+
+ggplot(
+  gasto_por_sede,
+  aes(x = reorder(sede, Gasto_Total),
+      y = Gasto_Total,
+      fill = sede)) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma_format(
+    big.mark = ".", 
+    decimal.mark = ",")) +
+  labs(title = "Gasto Total por Sede",
+       x = "Sede",
+       y = "Gasto Total") +
+  theme(legend.position = "none")
+
+#' 
+#' 6.  Realizar un diagrama de dispersión con los montos de ventas y las propinas para cada sede. ¿Qué puede observarse? Justificar con una medida cuantitativa.
+#' 
+## -----------------------------------------------------------------------------
+ggplot(datos_limpios, aes(x = gasto_total, y = propina)) +
+  geom_point(alpha = 0.5, color = "darkblue") +
+  facet_wrap(~ sede, ncol = 4) +
+  labs(
+    title = "Vista General: Relación Monto vs. Propina en Todas las Sedes",
+    x = "Monto de la Venta ($)",
+    y = "Propina ($)"
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Obtenemos la lista de todas las sedes únicas
+sedes_unicas <- unique(datos_limpios$sede)
+
+# Usamos un bucle 'for' para recorrer cada sede
+for (sede_actual in sedes_unicas) {
+
+  # Filtramos los datos para la sede actual
+  datos_filtrados <- subset(datos_limpios, sede == sede_actual)
+
+  # Creamos el gráfico para la sede actual
+  grafico_detalle <- ggplot(datos_filtrados, aes(x = gasto_total, y = propina)) +
+    geom_point(alpha = 0.6, color = "darkgreen", size = 2.5) +
+    labs(
+      title = paste("Detalle Sede:", sede_actual),
+      x = "Monto de la Venta ($)",
+      y = "Propina ($)"
+    ) +
+    theme_bw(base_size = 14)
+  
+  # Imprimimos el gráfico para la sede actual
+  print(grafico_detalle)
+}
+
+# Calculamos el coeficiente de correlación de Pearson para todo el dataset
+correlacion_gastos_y_propina <- cor(datos_limpios$gasto_total, datos_limpios$propina)
+
+# Imprimimos el resultado en la consola
+print(paste("El coeficiente de correlación de Pearson entre monto y propina es:", round(correlacion_gastos_y_propina, 3)))
+
+#' 
+#' 7.  Calcular las matrices de covarianzas y de correlaciones. A partir de estas matrices dar un ejemplo de variables fuertemente correlacionadas positivamente, de variables fuertemente correlacionadas negativamente y de variables no correlacionadas.
+#' 
+## -----------------------------------------------------------------------------
+# Seleccionamos todas las columnas numéricas
+datos_numericos <- datos_limpios[ , c(
+  "cantidad_visitantes",
+  "cantidad_combos",
+  "gasto_total",
+  "propina",
+  "tiempo_espera",
+  "satisfaccion_cliente",
+  "numero_de_mesas_disponibles"
+  )]
+
+options(width = 80) # (mejora visual de la salida)
+
+# Calculamos la matriz de covarianzas.
+print("--- Matriz de Covarianzas ---")
+cov(datos_numericos)
+
+# Calculamos la matriz de correlaciones
+matriz_cor <- cor(datos_numericos)
+
+corrplot(
+  matriz_cor,
+  tl.col = "black",
+  tl.srt = 45
+)
+
+#' 
+#' 8.  Generar una serie de tiempo transformando los datos para obtener la cantidad de visitas totales por mes (sumando todas las sedes).
+#' 
+## -----------------------------------------------------------------------------
+serie_visitantes_tsa <- readRDS("serie_visitantes_ts.rds")
+
+plot.ts(serie_visitantes_tsa,
+     main = "Visitas Totales por Mes",
+     xlab = "Tiempo",
+     ylab = "Cantidad Total de Visitantes",
+     col = "steelblue",
+     lwd = 2)
+
+#' 
+#' 9.  Utilizando la descomposicióon aditiva, graficar:
+#' 
+#' a)  La serie de tiempo original eliminando la componente de tendencia.
+#' 
+#' b)  La serie de tiempo original eliminando la componente de estacionalidad.
+#' 
+## -----------------------------------------------------------------------------
+serie_visitantes_da <- decompose(serie_visitantes_tsa, type = 'additive')
+serie_visitantes_detrend_a <- serie_visitantes_tsa - serie_visitantes_da$trend
+plot.ts(
+  serie_visitantes_detrend_a,
+  col = "darkseagreen4",
+  main = "TS sin tendencia",
+  xlab = "Mes",
+  ylab = "Visitas"
+)
+
+serie_visitantes_deseasonal_a <- serie_visitantes_tsa - serie_visitantes_da$seasonal
+plot.ts(
+  serie_visitantes_deseasonal_a,
+  col = "darkseagreen4",
+  main = "TS sin estacionalidad",
+  xlab = "Mes",
+  ylab = "Visitas"
+)
+
+#' 
+#' 10. Graficar las funciones de autocorrelacióon de la serie de tiempo original y de la componente residual. ¿Qué puede observarse sobre la estacionariedad de estas series?
+#' 
+## -----------------------------------------------------------------------------
+acf(serie_visitantes_tsa, lag.max = 60, ci.col="cyan", type = "correlation", main = "TS Original")
+
+residuo_da <- decompose(serie_visitantes_tsa, type = "additive")$random
+acf(residuo_da, lag.max = 60, ci.col="cyan", type = "correlation", main = "TS Residual", na.action = na.pass)
+
+#' 
+## -----------------------------------------------------------------------------
+write.csv(datos_limpios, "tp2_datos_limpios.csv", row.names = FALSE)
+
+#' 
+## -----------------------------------------------------------------------------
+df_serie <- data.frame(
+  tiempo = as.numeric(time(serie_visitantes_tsa)),
+  visitas = as.numeric(serie_visitantes_tsa)
+)
+write.csv(df_serie, "tp2_serie_temporal.csv", row.names = FALSE)
+

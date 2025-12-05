@@ -1,49 +1,54 @@
 # ☕ Dashboard de Operaciones - Cafetería UNAHUR
 
-Este proyecto es una aplicación interactiva de **Business Intelligence y Data Science** diseñada para analizar y optimizar las operaciones de la cafetería universitaria.
+Este proyecto es una aplicación **Full-Stack de Data Science** diseñada para optimizar las operaciones de una cafetería universitaria. Transforma un análisis académico estático en un **Dashboard Interactivo de Gestión**.
 
-La herramienta integra análisis descriptivo, series temporales y modelos predictivos para ayudar a la gerencia en la toma de decisiones basada en datos.
+La herramienta integra Business Intelligence, series temporales con IA (Prophet) y simuladores predictivos para la toma de decisiones basada en datos.
 
 ## 🚀 Funcionalidades Principales
 
-La aplicación está dividida en 4 módulos estratégicos:
+La aplicación cuenta con 5 módulos estratégicos:
 
 1.  **Business Intelligence (KPIs):**
-    * Análisis de ingresos totales y ticket promedio.
-    * Comparativa de rendimiento entre sedes (Boxplots interactivos) para detectar variabilidad operativa.
-    * Análisis de correlaciones: ¿Influye el tiempo de espera en la satisfacción?
+    * Tablero de control con ingresos y métricas de afluencia.
+    * **Análisis de Correlaciones:** Mapa de calor (Heatmap) que valida la relación crítica entre Tiempos de Espera y Satisfacción del Cliente.
+    * Filtros dinámicos por Sede.
 
-2.  **Tendencias Temporales:**
-    * Visualización de la evolución histórica de visitas.
-    * Detección de estacionalidad (picos de fin de año y valles de receso).
+2.  **Forecasting con IA (Prophet):**
+    * Modelo de aprendizaje automático (Meta Prophet) para la predicción de demanda.
+    * Detección automática de estacionalidad académica (recesos vs. exámenes).
+    * Proyección interactiva a 3 meses.
 
-3.  **Simulador de Tiempos de Espera (Regresión):**
-    * Modelo predictivo ($Tiempo = -0.21 + 2.07 \times Cantidad$) que estima la demora según el tamaño del pedido.
-    * Sistema de alertas para pedidos grandes (>12 unidades) donde el modelo lineal pierde precisión.
+3.  **Simulador de Tiempos (Regresión Lineal):**
+    * Modelo predictivo ($Tiempo = -0.21 + 2.07 \times Cantidad$) para estimar demoras en cocina.
+    * **Calculadora de Riesgo:** Alertas automáticas de satisfacción según el tiempo proyectado.
 
-4.  **Laboratorio de Datos (Imputación):**
-    * Módulo técnico que demuestra técnicas de limpieza de datos.
-    * Comparación en tiempo real entre datos originales vs. imputación con KNN para corregir registros faltantes en pedidos de 3 unidades.
+4.  **Laboratorio de Datos (Data Quality):**
+    * Módulo técnico de limpieza de datos.
+    * Demostración de imputación con **KNN (K-Nearest Neighbors)** para recuperar información perdida de pedidos específicos.
+
+5.  **Conclusiones Estratégicas:**
+    * Reporte ejecutivo automatizado con hallazgos de negocio y recomendaciones operativas.
 
 ## 🛠️ Tecnologías Utilizadas
 
-* **Lenguaje:** Python 3.10+
-* **Framework Web:** Streamlit
-* **Visualización:** Plotly Express
-* **Manipulación de Datos:** Pandas, NumPy
+* **Core:** Python 3.10+, Streamlit.
+* **Machine Learning:** Prophet (Forecasting), Scikit-learn.
+* **Visualización:** Plotly Express (Gráficos interactivos adaptados a Dark Mode).
+* **ETL & Análisis Previo:** R / RStudio (Scripts disponibles en `/r_scripts`).
 
 ## 📂 Estructura del Proyecto
 
-    ├── app.py              # Código principal de la aplicación
-    ├── requirements.txt    # Dependencias del proyecto
+    ├── app.py              # Aplicación principal
+    ├── requirements.txt    # Dependencias (incluye Prophet)
     ├── data/               # Datasets procesados (CSV)
+    ├── r_scripts/          # ETL original y análisis exploratorio en R
     └── README.md           # Documentación
 
-## 📦 Instalación y Uso Local
+## 📦 Instalación Local
 
 1.  Clonar el repositorio:
 
-        git clone [https://github.com/TU_USUARIO/dashboard-cafeteria-unahur.git](https://github.com/TU_USUARIO/dashboard-cafeteria-unahur.git)
+        git clone [https://github.com/opablon/dashboard-cafeteria-unahur](https://github.com/TU_USUARIO/dashboard-cafeteria-unahur)
 
 2.  Instalar dependencias:
 
@@ -54,4 +59,4 @@ La aplicación está dividida en 4 módulos estratégicos:
         streamlit run app.py
 
 ---
-*Proyecto académico para la asignatura de Fundamentos de Ciencias de Datos - Tecnicatura Universitaria en IA (UNAHUR).*
+*Proyecto basado en trabajos académicos para la asignatura Fundamentos de Ciencias de Datos de la Tecnicatura Universitaria en IA (UNAHUR).*
