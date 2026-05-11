@@ -14,6 +14,10 @@ Este proyecto es una aplicación **Full-Stack de Data Science** diseñada para o
 
 La herramienta integra Business Intelligence, series temporales con IA (Prophet) y simuladores predictivos para la toma de decisiones basada en datos.
 
+# Despliegue
+
+https://huggingface.co/spaces/opablon/dashboard-cafeteria-unahur
+
 ## 🚀 Funcionalidades Principales
 
 La aplicación cuenta con 5 módulos estratégicos:
